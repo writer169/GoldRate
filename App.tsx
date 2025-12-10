@@ -12,6 +12,7 @@ import { RateCard } from './components/RateCard';
 import { DigitAnalysis } from './components/DigitAnalysis';
 import { useWakeLock } from './hooks/useWakeLock';
 import { useAutoUpdate } from './hooks/useAutoUpdate';
+import * as Updates from 'expo-updates';
 
 export default function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -61,6 +62,22 @@ export default function App() {
   }, [loadData]);
 
   useAutoUpdate(async () => {
+    // Сначала проверяем OTA-обновление (только в preview/production билде)
+    if (!__DEV__) {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          console.log('OTA update found – applying...');
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();   // приложение само перезапустится
+          return;                        // дальше не идём – будет релоад
+        }
+      } catch (e) {
+        console.warn('OTA check failed', e);
+      }
+    }
+
+    // Если обновления нет – просто обновляем данные (как было раньше)
     await loadData();
   });
 
