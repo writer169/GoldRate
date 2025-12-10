@@ -1,0 +1,12 @@
+name: Publish preview updates on every push
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  update:
+    type: update
+    params:
+      channel: preview

@@ -32,6 +32,12 @@
         "projectId": "623f787e-a785-4b28-be65-698be8c2ece4"
       }
     },
-    "owner": "writer169"
+    "owner": "writer169",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/623f787e-a785-4b28-be65-698be8c2ece4"
+    }
   }
 }
