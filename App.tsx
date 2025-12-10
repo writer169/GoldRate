@@ -116,7 +116,7 @@ export default function App() {
       <View style={[headerBaseClass, { backgroundColor: headerBg }]}>
         <View style={styles.headerContent}>
           {!stale && !loading && (
-            <Text style={styles.headerLabel}>АКТУАЛЬНО!</Text>
+            <Text style={styles.headerLabel}>АКТУАЛЬНО.</Text>
           )}
           <Text style={[styles.headerDate, { color: headerTextColor }]}>
             {data?.lastUpdated ? formatKZDate(data.lastUpdated) : 'Загрузка...'}
