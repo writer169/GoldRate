@@ -1,0 +1,33 @@
+# Expo
+.expo/
+.expo-shared/
+*.expo.js
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Android
+android/
+ios/
+*.iml
+.gradle
+local.properties
+*.keystore
+*.jks
+
+# Google / Firebase secrets
+google-services.json
+GoogleService-Info.plist
+
+# Mac / Windows
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.production
