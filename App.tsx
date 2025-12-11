@@ -20,6 +20,7 @@ export default function App() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastFetchFailed, setLastFetchFailed] = useState<boolean>(false);
 
   useWakeLock();
 
@@ -37,15 +38,11 @@ export default function App() {
     try {
       const result = await fetchRates();
       setData(result);
+      setLastFetchFailed(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки данных';
       setError(errorMessage);
-
-      // Try to load cache if failed
-      // (fetchRates internal logic handles returning cache if API fails, but if it throws, it means no cache or severe error)
-      // Actually fetchRates in my implementation throws if NO data at all.
-      // If it returns cache, it doesn't throw.
-      // So if we are here, we really failed.
+      setLastFetchFailed(true);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,23 +58,26 @@ export default function App() {
     loadData();
   }, [loadData]);
 
+  const handleRefreshPress = () => {
+    if (!loading) {
+      loadData();
+    }
+  };
+
   useAutoUpdate(async () => {
-    // Сначала проверяем OTA-обновление (только в preview/production билде)
     if (!__DEV__) {
       try {
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
           console.log('OTA update found – applying...');
           await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();   // приложение само перезапустится
-          return;                        // дальше не идём – будет релоад
+          await Updates.reloadAsync();
+          return;
         }
       } catch (e) {
         console.warn('OTA check failed', e);
       }
     }
-
-    // Если обновления нет – просто обновляем данные (как было раньше)
     await loadData();
   });
 
@@ -94,10 +94,6 @@ export default function App() {
   const formatKZDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      // In Native, Date objects work normally, but let's emulate the +5 timezone shift if needed?
-      // Actually new Date(ISO) in JS creates local time object.
-      // If server sends UTC, we want KZ time. 
-      // Existing logic: UTC + 5 hours.
       const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
       const kzTime = new Date(utc + (3600000 * 5));
       return format(kzTime, 'dd.MM.yyyy HH:mm', { locale: ru });
@@ -110,7 +106,6 @@ export default function App() {
   const prevRates = data ? getSortedRates(data.previous) : [];
   const stale = isStale(data?.lastUpdated);
 
-  // Styles logic
   const headerBaseClass = styles.header;
   const headerBg = loading ? '#e2e8f0' : stale ? '#fef9c3' : '#dcfce7';
   const headerTextColor = stale ? '#713f12' : '#14532d';
@@ -140,12 +135,18 @@ export default function App() {
           </Text>
         </View>
         <View style={styles.iconsRow}>
-          <View style={styles.iconBox}>
-            {isOnline ? <Wifi size={16} color="#000" /> : <WifiOff size={16} color="#dc2626" />}
-          </View>
-          <View style={styles.iconBox}>
-            {loading ? <ActivityIndicator size="small" color="#000" /> : <RefreshCw size={16} color="#000" />}
-          </View>
+          {lastFetchFailed && (
+            <View style={styles.iconBox}>
+              {isOnline ? <Wifi size={20} color="#000" /> : <WifiOff size={20} color="#dc2626" />}
+            </View>
+          )}
+          <TouchableOpacity 
+            style={styles.iconBox} 
+            onPress={handleRefreshPress}
+            disabled={loading}
+          >
+            {loading ? <ActivityIndicator size="small" color="#000" /> : <RefreshCw size={20} color="#000" />}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 30, // For status bar overlap
+    paddingTop: 30,
   },
   centerContainer: {
     flex: 1,
@@ -258,9 +259,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   cardsStack: {
-    gap: 12, // Gap support depends on RN version, otherwise use margin in items
+    gap: 8,
   },
   analysisContainer: {
     marginTop: 16,
@@ -326,4 +327,3 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   }
 });
-
