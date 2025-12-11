@@ -35,10 +35,23 @@ export default function App() {
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
+    let apiFailed = false;
+    
     try {
+      // Пробуем запросить API напрямую, чтобы проверить доступность
+      try {
+        const response = await fetch('https://m-lombard.kz/ru/api/admin/purities/?format=json', {
+          method: 'HEAD',
+          timeout: 5000
+        } as any);
+        apiFailed = !response.ok;
+      } catch {
+        apiFailed = true;
+      }
+      
       const result = await fetchRates();
       setData(result);
-      setLastFetchFailed(false);
+      setLastFetchFailed(apiFailed);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки данных';
       setError(errorMessage);
