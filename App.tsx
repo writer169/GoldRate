@@ -274,8 +274,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   analysisContainer: {
-    marginTop: 16,
-    paddingTop: 16,
+    marginTop: 8,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
   },
